@@ -1,0 +1,7 @@
+langchain-community
+langchain-openai
+tiktoken
+faiss-cpu==1.8.0.post1
+fastapi
+uvicorn
+pydantic
