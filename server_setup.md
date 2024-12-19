@@ -30,6 +30,17 @@ cd Python-3.12.0
 make -j 4
 sudo make altinstall
 ```
+Make Python 3.12 the default version:  
+```bash
+sudo ln -sf /usr/local/bin/python3.12 /usr/bin/python3
+sudo ln -sf /usr/local/bin/pip3.12 /usr/bin/pip3
+```
+Install pip:  
+```bash
+curl -O https://bootstrap.pypa.io/get-pip.py
+python3.12 get-pip.py
+python3.12 -m pip install --upgrade pip
+```
 Verify Python Installation:  
 ```bash
 python3.12 --version
