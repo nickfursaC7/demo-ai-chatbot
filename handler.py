@@ -1,35 +1,17 @@
-from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.prompts import PromptTemplate
+import json
 from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
 import helpers as h
+from chains import ChainManager
 
 logging.getLogger().setLevel(logging.INFO)
 
 app = FastAPI()
 
-custom_prompt = PromptTemplate(
-    template=(
-        "You are a helpful assistant answering questions based on retrieved documents and past conversation.\n\n"
-        "If available, provide URL links to the source of the information.\n\n"
-        "Make sure to review the context when providing relevant information.\n\n"
-        "If you don't know the answer, just say that you don't know. Don't try to make up an answer.\n\n"
-
-        "IMPORTANT: Preserve the original case of any URLs in your response.\n\n"
-
-        "Conversation History: {conversation_history}\n\n"
-        "Context: {context}\n\n"
-        "Question: {query}\n"
-        "Answer:"
-    ),
-    input_variables=["conversation_history", "context", "query"],
-)
-
-db = FAISS.load_local("model", OpenAIEmbeddings(), allow_dangerous_deserialization=True)
-llm = ChatOpenAI(temperature=0.0, model_name="gpt-4o-mini")
-qa_chain = custom_prompt | llm
+chain = ChainManager()
+db = chain.db
+intent_chain = chain.get_chain("intent")
 
 class Query(BaseModel):
     query: str
@@ -39,12 +21,50 @@ class Query(BaseModel):
 def ask(request: Query):
     user_id = request.user_id
     query = request.query
-    logging.info(f"User {user_id} asked: {query}")
-    docs =db.similarity_search_with_score(query=query, k=3, score_threshold=0.5)
-    log_line = '\n'+'\n'.join([', '.join([str(round(score, 3)), doc.metadata["title"]]) for doc, score in docs])
-    logging.info(f"Retrieved documents: {log_line}")
+    intent = intent_chain.invoke({"query": query}).content
+    logging.info(f"User {user_id} asked: {query}\nIntent: {intent}")
+    
+    if intent == "research":
+        research_chain = chain.get_chain("research")
+        search_results = db.similarity_search_with_score(query=query, k=3, score_threshold=0.5)
+        docs = [doc for doc in search_results]
 
-    response = h.run_conversation(qa_chain, user_id, query, docs)
+        log_line = '\n' + \
+            '\n'.join([', '.join([str(round(score, 3)), doc.metadata['title']])
+                    for doc, score in search_results])
+        logging.info(f"Retrieved docs: {log_line}")
+
+        input_params = {
+            "qa_chain": research_chain,
+            "conversation_history": h.CH.retrieve_conversation(user_id),
+            "context": docs,
+            "query": query,
+        }
+    elif intent == "wallet":
+        
+        #test user data (to be replaced with actual user data retrieval)
+        with open("test_user_data.json", "r") as f:
+            user_data = json.load(f)
+        
+        wallet_chain = chain.get_chain("wallet")
+        input_params = {
+            "qa_chain": wallet_chain,
+            "conversation_history": h.CH.retrieve_conversation(user_id),
+            "user_data": user_data,
+            "query": query,
+        }
+    elif intent == "unknown":
+        unknown_chain = chain.get_chain("unknown")
+        input_params = {
+            "qa_chain": unknown_chain,
+            "conversation_history": h.CH.retrieve_conversation(user_id),
+            "context": [],
+            "query": query,
+        }
+    else:
+        raise ValueError(f"Unknown intent: {intent}")
+
+    response = h.run_conversation(**input_params)
     logging.info(f"UserID {user_id}\nResponse: {response}")
 
     body = {

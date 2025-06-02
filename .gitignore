@@ -5,3 +5,6 @@ __pycache__/
 data/**
 model/**
 *.pem
+.env
+/.vscode
+/__pycache__

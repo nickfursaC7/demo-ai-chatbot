@@ -1,0 +1,48 @@
+{
+    "award_wallet": [
+        {
+            "award_amount": 200000,
+            "award_limit": null,
+            "award_type": "points",
+            "program_name": "Chase Ultimate Rewards"
+        },
+        {
+            "award_amount": 300000,
+            "award_limit": null,
+            "award_type": "points",
+            "program_name": "IHG Rewards Club"
+        },
+        {
+            "award_amount": 280000,
+            "award_limit": null,
+            "award_type": "points",
+            "program_name": "Marriott Bonvoy"
+        },
+        {
+            "award_amount": 635003,
+            "award_limit": null,
+            "award_type": "points",
+            "program_name": "Hilton HiltonHonors"
+        },
+        {
+            "award_amount": 300000,
+            "award_limit": null,
+            "award_type": "points",
+            "program_name": "American Express Membership Rewards"
+        },
+        {
+            "award_amount": 100000,
+            "award_limit": null,
+            "award_type": "points",
+            "program_name": "American Airlines AAdvantage"
+        },
+        {
+            "award_amount": 100001,
+            "award_limit": null,
+            "award_type": "points",
+            "program_name": "United MileagePlus"
+        }
+    ],
+    "user_firstname": "Nick",
+    "home_airport": "Los Angeles (LAX)"
+}
